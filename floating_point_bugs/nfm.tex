@@ -65,15 +65,16 @@ int main() {
 The IEEE754 standard~\cite{IEEE:1985:AIS} does not specify correct
 rounding methods on elementary functions such as the exponential,
 logarithm, and trigonometric functions. Programmers and engineers
-usually expect the program to print out an approximated value around
-$\sin(-2.437592) \simeq -0.64727239229$ with an ``acceptable'' amount
-of error. However, they all should agree that the result be in the
-range between $-1.0$ and $1.0$, even in the worst case.
+usually expect the above program to print out an approximated value
+around $\sin(-2.437592) \simeq -0.64727239229$ with an \emph{acceptable}
+error bound. However, they all should agree that the result be in
+the range between $-1.0$ and $1.0$, even in the worst case.
 
 However, a surprising result appears if we compile and execute the
-program in a machine running Ubuntu 12.04 LTS (or any system with
-EGLIBC-2.15). The output is greater than $10^{53}$ and it should not be
-a return value of sine function in any sense.
+program in a machine using EGLIBC-2.16 or older (a typical example is
+Ubuntu 12.04 LTS). The output is greater than $10^{53}$ which violates
+the mathematical property of the sine function,
+$\forall x. -1 \le \sin(x) \le 1$.
 
 \begin{Verbatim}[frame=single, fontsize=\relsize{-1}]
 $ gcc exp_bug.c -lm && ./a.out
@@ -120,19 +121,19 @@ wrong results has significant implications:
   computations. \textit{inf} is a special value in the IEEE754
   standard which indicates an overflow in a computation. If one of
   subexpressions is evaluated to \textit{inf}, then in general the
-  main expression also becomes infinity ($+\infty$ or $-\infty$) or
-  NaN (Not a Number).
+  whole expression is also evaluated to either infinity ($+\infty$ or
+  $-\infty$) or NaN (Not a Number).
 \item AMD ($-160.191709$): Mathematically, $\cosh(x)$ is greater than or
-  equal to $1$ for all $x \in \mathbb{R}$. As a result, programmers
+  equal to $1$ for all real value $x \in \mathbb{R}$. As a result, programmers
   and engineers write algorithms based on the invariant $\forall x. \
   1 \le \cosh(x)$. This result, $-160.191709$, breaks the invariant
-  and could cause an unexpected behavior.
+  and could cause an unexpected behavior in the algorithms.
 \end{itemize}
 
 
-\section{Floating-point Bugs in EGLIBC (Ver. $2.16$ or Older)}\label{sec:bugs}
+\section{Random Testing of Math Functions in EGLIBC (Ver. $2.16$ or Older)}\label{sec:bugs}
 
-We have tested the implementations of the following math functions in C standard library:
+We have tested the implementations of the following math functions in EGLIBC-2.16:
 
 \[
 \mathtt{sin}, \mathtt{cos}, \mathtt{tan}, \mathtt{acos},
@@ -218,11 +219,11 @@ For each sample $x$ and for each rounding mode $rnd$, we compute two
 values $f^{\mathrm{rnd}}_{C}(x)$ and
 $f^{\mathrm{rnd}}_{\mathrm{MPFR}}(x)$ where $f_{C}$ is a function $f$
 in C standard library and $f_{\mathrm{MPFR}}$ is a function $f$ in the
-GNU MPFR library. MPFR supports arbitrary-precision floating-point
-computation and we use it as a reference implementation to have a
-comparison. The correctness of MPFR is, of course, another issue and
-we do not discuss it here. In the experiments, we use 256-bit
-precision for MPFR.
+GNU MPFR library~\cite{Fousse:2007:MMB:1236463.1236468}. MPFR supports
+arbitrary-precision floating-point computation and we use it as a
+reference implementation to have a comparison. The correctness of MPFR
+is, of course, another issue. However, we do not discuss this issue
+here. In the experiments, we use 256-bit precision for MPFR.
 
 We have the following expectations for the two values:
 \begin{itemize}
@@ -242,10 +243,10 @@ We have the following expectations for the two values:
 \end{itemize}
 
 We run the experiments\footnote{Source code is available at
-  https://github.com/soonhokong/fp-test} on two machines -- one with
-Intel Core i7-2600 CPU (8-core, 3.40GHz) and another with AMD Opteron
-Processor 6134 (32-core, 2.30GHz). Both of them are running Ubuntu
-12.04 LTS in which uses EGLIBC-2.15 for the C standard library
+  \url{https://github.com/soonhokong/fp-test}} on two machines -- one
+with Intel Core i7-2600 CPU (8-core, 3.40GHz) and another with AMD
+Opteron Processor 6134 (32-core, 2.30GHz). Both of them are running
+Ubuntu 12.04 LTS in which uses EGLIBC-2.15 for the C standard library
 implementation. We use MPFR-3.1.1 and g++-4.8.1 C++ compiler in the
 experiments.
 
@@ -264,6 +265,9 @@ The experimental results are summarized in table~\ref{tbl:exp_result}.
   $\mathrm{log}$, $\mathrm{log_{10}}$, and $\mathrm{sqrt}$ functions pass
   our tests.
 \end{enumerate}
+
+\section{Illustration of the Bug}
+
 
 \section{Fix in EGLIBC-2.17 and Remaining Problems}\label{sec:fix}
 
@@ -291,12 +295,13 @@ __sin(double x)\{
         \textbf{SET_RESTORE_ROUND_53BIT (FE_TONEAREST);}
 \end{Verbatim}
 
-We find that the patch does not really fix the problem. At line 113,
-it resets the rounding mode to ``round to nearest'' and compute the
-value of $\sin(x)$ while ignoring the user-specified rounding mode. We
-found a case in which the value of $\rup{\sin}_{C}(x)$ is smaller than
-the value of $\rne{\sin}_{\mathrm{MPFR}}(x)$, which violates the
-semantics of ``toward $+\infty$'' rounding mode:
+At line 113, it resets the rounding mode to ``round to nearest'' and
+compute the value of $\sin(x)$ while ignoring the user-specified
+rounding mode. We found that the patch does not \emph{fix} the problem
+correctly. For example, there is a case in which the value of
+$\rup{\sin}_{C}(x)$ is smaller than the value of
+$\rne{\sin}_{\mathrm{MPFR}}(x)$, which violates the semantics of
+``toward $+\infty$'' rounding mode:
 \begin{align*}
             \rup{\sin}_{C}(-3.93799) & = 0.7148414480838297\underline{66879659928236}\\
    \rne{\sin}_{\mathrm{MPFR}}(-3.93799) & = 0.7148414480838297\underline{71665831705916}
