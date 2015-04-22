@@ -131,7 +131,7 @@ wrong results has significant implications:
 \end{itemize}
 
 
-\section{Random Testing of Math Functions in EGLIBC (Ver. $2.16$ or Older)}\label{sec:bugs}
+\section{Testing of Math Functions in EGLIBC-2.16}\label{sec:bugs}
 
 We have tested the implementations of the following math functions in EGLIBC-2.16:
 
@@ -160,10 +160,10 @@ We have tested the implementations of the following math functions in EGLIBC-2.1
   \label{tbl:exp_setup}
 \end{table}
 
-For each function $f$, we take $100,000$ random numbers from a subset
-of function $f$'s domain. Table~\ref{tbl:exp_setup} shows each
+For each function $f$, we sample $100,000$ random numbers from a
+subset of function $f$'s domain. Table~\ref{tbl:exp_setup} shows each
 function's sampling domain and range. We pick the sampling domain
-carefully so that the result of the computations can be fit in a
+carefully so that the result of the computations fit in a
 double-precision variable. We consider the four rounding modes
 supported by C99 standard~\cite{ISO:C99}:
 \[
@@ -225,7 +225,8 @@ reference implementation to have a comparison. The correctness of MPFR
 is, of course, another issue. However, we do not discuss this issue
 here. In the experiments, we use 256-bit precision for MPFR.
 
-We have the following expectations for the two values:
+We have the following expectations for the two values
+$f^{\mathrm{rnd}}_{C}(x)$ and $f^{\mathrm{rnd}}_{\mathrm{MPFR}}(x)$:
 \begin{itemize}
 \item Consistency: The difference between $f^{\mathrm{rnd}}_{C}(x)$
   and $f^{\mathrm{rnd}}_{\mathrm{MPFR}}(x)$ should not be too large.
@@ -247,8 +248,7 @@ We run the experiments\footnote{Source code is available at
 with Intel Core i7-2600 CPU (8-core, 3.40GHz) and another with AMD
 Opteron Processor 6134 (32-core, 2.30GHz). Both of them are running
 Ubuntu 12.04 LTS in which uses EGLIBC-2.15 for the C standard library
-implementation. We use MPFR-3.1.1 and g++-4.8.1 C++ compiler in the
-experiments.
+implementation. We use MPFR-3.1.1 and gcc-4.8.1 in the experiments.
 
 The experimental results are summarized in table~\ref{tbl:exp_result}.
 \begin{enumerate}
@@ -267,6 +267,40 @@ The experimental results are summarized in table~\ref{tbl:exp_result}.
 \end{enumerate}
 
 \section{Illustration of the Bug}
+
+
+
+\begin{Verbatim}
+Typical for plenty of basic numerical procedures:
+
+- Break the domain into several compact pieces
+- sin(x) breakpoints :
+
+0, 2−26, 0.25, 0.855469, 2.426265, 105414350, ..., 21024, ...
+
+- Local approximation algorithms in each piece • Bounded loops, mostly no pointers
+- A lot of table lookup and bit-level hacks
+
+In many cases, we can only reason with concrete semantics of bit-level operations.
+• Tiny overapproximation can give false alarms.
+• Undecidable theories over real numbers
+• Mixed real/integers
+• Large domain of inputs
+• Huge proofs, if any
+
+
+Using dReal, we found that the bug comes from an array
+out-of-bound problem.
+__sin(double x){ ...
+/*---------------------------- 0.25<|x|< 0.855469---------------------- */
+else if (k < 0x3feb6000) { ...
+k=u.i[LOW_HALF]<<2; sn=(m>0)?__sincostab.x[k]:-__sincostab.x[k]; //table lookup ssn=(m>0)?__sincostab.x[k+1]:-__sincostab.x[k+1];
+...
+Here,   sincostab.x is an array of size 440.
+
+
+
+\end{Verbatim}
 
 
 \section{Fix in EGLIBC-2.17 and Remaining Problems}\label{sec:fix}
