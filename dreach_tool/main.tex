@@ -6,6 +6,12 @@
 \usepackage{fancyvrb}
 \usepackage{hyperref}
 \usepackage{framed}
+\usepackage{amsmath,amssymb,mathtools,nccmath}
+\usepackage{paralist}
+\usepackage{tabularx,booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{tikz}
 \usepackage[]{algorithm2e}
 
 \newcommand{\enforce}{\mathsf{enforce}}
@@ -14,9 +20,19 @@
 \newcommand{\dReal}{\textsf{dReal}}
 \newcommand{\dReach}{\textsf{dReach}}
 
+\newcommand{\ite}[3]{\mathbf{if}\ #1\ \mathbf{then}\ #2\ \mathbf{else}\ #3\ \mathbf{fi}}
+\newcommand{\power}[1]{2^{#1}}
+\newcommand{\monus}{\;\,\mathtt{monus}\;\,}
+\newcommand{\MA}{\mathcal{M}\!\!\mathcal{A}}
+\newcommand{\AP}{\mathit{A\!P}}
+\newcommand{\abs}{\ensuremath{\mathrm{abs}}}
+\newcommand{\sign}{\ensuremath{\mathrm{sign}}}
+\newcommand{\val}{\ensuremath{\mathit{val}}}
+\newcommand{\eoe}{\hfill$\blacksquare$}
+
 \input{preamble}
 
-\title{\dReach{}: $\delta$-Reachability Analysis\\ for Hybrid Systems}
+\title{\mbox{\dReach{}: $\delta$-Reachability Analysis for Hybrid Systems}}
 
 \begin{document}
 
@@ -48,10 +64,12 @@
 % on the actual demonstration.
 
 \input{intro.tex}
+\input{background.tex}
 \input{system.tex}
-\input{solving.tex}
+\input{encoding.tex}
 \input{using.tex}
-\input{example.tex}
+\input{exp.tex}
+\input{conclusion.tex}
 \bibliographystyle{abbrv}
 \bibliography{tau_tacas}
 
@@ -60,3 +78,8 @@
 %\input{appendix.tex}
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main.tex"
+%%% End:

@@ -10,25 +10,23 @@ Figure~\ref{fig:bouncing-ball-drh} shows how to describe a small
 example hybrid system, an inelastic bouncing ball with air resistance.
 
 \begin{itemize}
-\item In macro definitions, we allows users to define macros in C
-preprocessor style which can be used in the following
+\item In macro definitions, we allows users to define macros in C-preprocessor style which can be used in the following
 sections. Macro expansions occur before the other parts are processed.
 
 \item A variable declaration specifies a real variable and its domain
   in a real interval. \dReach{} requires special declaration for
   \textit{time} variable, to specify the upperbound of time duration.
 
-\item A mode definition consists of mode id, mode invariant, flow, and jump.
-\textit{id} is a unique positive interger assigned to a mode. An
-invariant is a conjuction of logic formulae which must always hold in
-a mode. A flow describes the continuous dynamics of a mode by providing
-a set of ODEs. The first
-formula of \textit{jump} is interpreted as a guard, a logic formula
-specifying a condition to make a transition. Note that this allows a
-transition but does not force it. The second argument of
-\textit{jump}, $n$ denotes the target mode-id. The last one is
-\textit{reset}, a logic formula connecting the old and new values for
-the transition.
+\item A mode definition consists of mode id, mode invariant, flow, and
+  jump.  \textit{id} is a unique positive integer assigned to a
+  mode. An invariant is a conjunction of logic formulas which must hold
+  in a mode. A flow describes the continuous dynamics of a mode by
+  providing a set of ODEs. The first formula of \textit{jump} is
+  interpreted as a guard, a logic formula specifying a condition to
+  make a transition. Note that this allows a transition but does not
+  force it. The second argument of \textit{jump}, $n$ denotes the
+  target mode-id. The last one is \textit{reset}, a logic formula
+  connecting the old and new values for the transition.
 
 \item \textit{initial-condition} specifies the initial mode of a hybrid
 system and its initial configuration. \textit{goal} shares the same
@@ -66,7 +64,7 @@ syntactic structure of \textit{initial-condition}.
 \end{figure}
 \vspace{-1.6em}
 \subsection{Command Line Options}
-\dReach{} follows the standard unix command-line usage:
+\dReach{} follows the standard Unix command-line usage:
 \begin{Verbatim}[fontfamily=courier, framesep=1mm, fontsize=\small]
 dReach <options> <drh file>
 \end{Verbatim}
@@ -78,13 +76,10 @@ It has the following options:
 \item If \texttt{--precision <p>} is used, use precision $p$ (Default: $0.001$).
 \item If \texttt{--visualize} is set, \dReach{} generates extra visualization data.
 \end{itemize}
-We have a web-based visualization toolkit\footnote{The detailed
-  instructions are available at
-  \url{https://github.com/dreal/dreal/blob/master/doc/ode-visualization.md}.}
-which processes the generated visualization data and shows the
-counterexample trajectory. It provides a way to navigate and
-zoom-in/out trajectories which helps understand and debug the target
-hybrid system better.
+We have a web-based visualization toolkit which processes the
+generated visualization data and shows the counterexample
+trajectory. It provides a way to navigate and zoom-in/out trajectories
+which helps understand and debug the target hybrid system better.
 
 %%% Local Variables:
 %%% mode: latex
